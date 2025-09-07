@@ -81,3 +81,28 @@ matrix_multiplication_c/
       * 记录你的代码在不同矩阵规模下的性能数据。
 
 请记住，一份清晰、有逻辑的优化报告能让你在比赛中脱颖而出。
+
+### 示例交互流程
+``` bash
+ziyang@LAPTOP-SPPQSEGM:/mnt/d/Users/ASUS/Desktop/SRQ-25$ git clone https://github.com/ziyang22/SRQ-25.git
+# some information ~
+ziyang@LAPTOP-SPPQSEGM:/mnt/d/Users/ASUS/Desktop/SRQ-25$ cd build 
+ziyang@LAPTOP-SPPQSEGM:/mnt/d/Users/ASUS/Desktop/SRQ-25/build$ cmake ..
+-- OpenMP found, enabling C support.
+-- Configuring done (0.1s)
+-- Generating done (0.2s)
+-- Build files have been written to: /mnt/d/Users/ASUS/Desktop/SRQ-25/build
+ziyang@LAPTOP-SPPQSEGM:/mnt/d/Users/ASUS/Desktop/SRQ-25/build$ ./run_matrix_multiplication test
+-bash: ./run_matrix_multiplication: No such file or directory
+ziyang@LAPTOP-SPPQSEGM:/mnt/d/Users/ASUS/Desktop/SRQ-25/build$ make
+[ 33%] Building C object CMakeFiles/run_matrix_multiplication.dir/src/main.c.o
+[ 66%] Building C object CMakeFiles/run_matrix_multiplication.dir/src/task.c.o
+[100%] Linking C executable run_matrix_multiplication
+[100%] Built target run_matrix_multiplication
+ziyang@LAPTOP-SPPQSEGM:/mnt/d/Users/ASUS/Desktop/SRQ-25/build$ ./run_matrix_multiplication test
+--- Running performance benchmark ---
+Testing matrix size: 1024x1024
+Naive multiplication took: 7.574566 seconds.
+Optimized multiplication took: 7.478565 seconds.
+...
+```
