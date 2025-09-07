@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.scpp": "cpp",
+        "*.swcu": "cpp",
+        "ostream": "cpp"
+    }
+}
