@@ -1,0 +1,3 @@
+/mnt/d/Users/ASUS/Desktop/SRQ-25/build/CMakeFiles/run_matrix_multiplication.dir
+/mnt/d/Users/ASUS/Desktop/SRQ-25/build/CMakeFiles/edit_cache.dir
+/mnt/d/Users/ASUS/Desktop/SRQ-25/build/CMakeFiles/rebuild_cache.dir

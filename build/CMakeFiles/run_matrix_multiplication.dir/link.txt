@@ -1,0 +1,1 @@
+/usr/bin/cc  -fopenmp CMakeFiles/run_matrix_multiplication.dir/src/main.c.o CMakeFiles/run_matrix_multiplication.dir/src/task.c.o -o run_matrix_multiplication  -lm 
