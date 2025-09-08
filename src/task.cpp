@@ -28,4 +28,6 @@ void multiply_naive(const double* A, const double* B, double* C, int M, int K, i
 void multiply_optimized(const double* A, const double* B, double* C, int M, int K, int N) {
     // 调用朴素实现作为默认行为
     multiply_naive(A, B, C, M, K, N);
+    // 学生需要在这里实现他们的优化代码！！！！
+
 }

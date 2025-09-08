@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <sys/time.h>
+#include <time.h> 
 #include <omp.h>
 #include "../include/task.h"
 
@@ -51,9 +52,10 @@ void run_correctness_test() {
     printf("--- Running correctness test ---\n");
 
     // 随便挑一个 M,K,N 做测试
-    const int M = 123;
-    const int K = 432;
-    const int N = 234;
+    srand((unsigned)time(NULL));
+    const int M = 1000 + rand() % 1001;
+    const int K = 1000 + rand() % 1001;
+    const int N = 1000 + rand() % 1001;
 
     double *A = create_matrix(M, K);
     double *B = create_matrix(K, N);
@@ -81,7 +83,7 @@ void run_correctness_test() {
     }
 
     if (passed) {
-        printf("Correctness test passed!\n");
+        printf("\033[32mCorrectness test passed!\033[0m\n");
     }
     printf("--------------------------------\n");
 
@@ -97,7 +99,7 @@ void run_benchmark() {
 
     // M, K, N 组合 !!!!严禁修改!!!!
     int M_list[] = {1024, 2048, 5321, 2025};
-    int K_list[] = {4321, 1466, 1235, 4666};
+    int K_list[] = {4321, 1466, 1235, 4666};  
     int N_list[] = {1024, 2048, 3425, 2025}; 
 
     int num_cases = sizeof(M_list) / sizeof(M_list[0]);
@@ -113,9 +115,8 @@ void run_benchmark() {
         printf("Testing matrix multiplication: %d x %d  *  %d x %d  =  %d x %d\n",
                M, K, K, N, M, N);
 
-        double *A, *B, *C;
+        double *A, *B, *C_naive, *C_opt;
         if (i == num_cases - 1) {
-            printf("Using sparse matrix (5%% nonzeros)...\n");
             A = create_sparse_matrix(M, K, 0.05);
             B = create_sparse_matrix(K, N, 0.05);
         } else {
@@ -123,12 +124,13 @@ void run_benchmark() {
             B = create_matrix(K, N);
         }
 
-        C = create_matrix(M, N);
+        C_naive = (double*)calloc(M * N, sizeof(double));
+        C_opt   = (double*)calloc(M * N, sizeof(double));
 
         // 朴素算法计时
         gettimeofday(&start, NULL);
         void multiply_naive(const double* A, const double* B, double* C, int M, int K, int N);
-        multiply_naive(A, B, C, M, K, N);
+        multiply_naive(A, B, C_naive, M, K, N);
         gettimeofday(&end, NULL);
         time_taken = (double)(end.tv_sec - start.tv_sec) + 
                      (double)(end.tv_usec - start.tv_usec) / 1000000.0;
@@ -136,16 +138,33 @@ void run_benchmark() {
 
         // 优化算法计时
         gettimeofday(&start, NULL);
-        multiply_optimized(A, B, C, M, K, N);
+        void multiply_optimized(const double* A, const double* B, double* C, int M, int K, int N);
+        multiply_optimized(A, B, C_opt, M, K, N);
         gettimeofday(&end, NULL);
         time_taken = (double)(end.tv_sec - start.tv_sec) + 
                      (double)(end.tv_usec - start.tv_usec) / 1000000.0;
         printf("Optimized multiplication took: %f seconds.\n", time_taken);
+
+        // 正确性验证
+        int passed = 1;
+        for (int j = 0; j < M * N; ++j) {
+            if (fabs(C_naive[j] - C_opt[j]) > 1e-6) {
+                printf("\033[31mCorrectness test failed at index %d (row=%d, col=%d)!\n",
+                    j, j / N, j % N);
+                printf("Naive: %f, Optimized: %f\033[0m\n", C_naive[j], C_opt[j]);
+                passed = 0;
+                break;
+            }
+        }
+        if (passed) {
+            printf("\033[32mCorrectness test passed!\033[0m\n");
+        }
         printf("--------------------------------\n");
 
         free_matrix(A);
         free_matrix(B);
-        free_matrix(C);
+        free_matrix(C_naive);
+        free_matrix(C_opt);
     }
 }
 
@@ -155,7 +174,9 @@ void run_benchmark() {
 // -----------------------------------------------------------
 
 int main(int argc, char* argv[]) {
-    omp_set_num_threads(16);// 设置最大线程数为16 !!!!严禁修改!!!!
+
+// 设置最大线程数为8 !!!!严禁修改!!!!
+    omp_set_num_threads(8);
     if (argc > 1 && strcmp(argv[1], "test") == 0) {
         run_correctness_test();
     } else {
