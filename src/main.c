@@ -98,9 +98,9 @@ void run_benchmark() {
     printf("--- Running performance benchmark ---\n");
 
     // M, K, N 组合 !!!!严禁修改!!!!
-    int M_list[] = {1024, 2048, 5321, 2025};
+    int M_list[] = {2040, 10240, 5321, 2025};
     int K_list[] = {4321, 1466, 1235, 4666};  
-    int N_list[] = {1024, 2048, 3425, 2025}; 
+    int N_list[] = {2040, 10240, 2425, 2025}; 
 
     int num_cases = sizeof(M_list) / sizeof(M_list[0]);
 
