@@ -8,9 +8,25 @@
 #include "../include/task.h"
 
 // -----------------------------------------------------------
-// 矩阵定义和基本操作
+// benchmark
 // -----------------------------------------------------------
 
+void multiply_naive(const double* A, const double* B, double* C, int M, int K, int N) {
+    memset(C, 0, M * N * sizeof(double));
+    #pragma omp parallel for
+    for (int i = 0; i < M; ++i) {
+        for (int k = 0; k < K; ++k) {
+            double aik = A[i * K + k];
+            for (int j = 0; j < N; ++j) {
+                C[i * N + j] += aik * B[k * N + j];
+            }
+        }
+    }
+}
+
+// -----------------------------------------------------------
+// 矩阵定义和基本操作
+// -----------------------------------------------------------
 double* create_sparse_matrix(int rows, int cols, double sparsity) {
     double* m = (double*)malloc(sizeof(double) * rows * cols);
     if (!m) {
@@ -62,8 +78,7 @@ void run_correctness_test() {
     double *C_naive = create_matrix(M, N);
     double *C_optimized = create_matrix(M, N);
 
-    // 声明朴素版本
-    void multiply_naive(const double* A, const double* B, double* C, int M, int K, int N);
+    // 调用朴素版本
     multiply_naive(A, B, C_naive, M, K, N);
 
     // 调用优化版本
@@ -97,21 +112,18 @@ void run_correctness_test() {
 void run_benchmark() {
     printf("--- Running performance benchmark ---\n");
 
-    // M, K, N 组合 !!!!严禁修改!!!!
     int M_list[] = {4096, 5321, 2025, 10240};
     int K_list[] = {1024, 1235, 4666,  1000};  
     int N_list[] = {4096, 3000, 2025, 10240}; 
-
+    double weights[] = {2.0, 2.0, 2.0, 4.0}; // 比例
     int num_cases = sizeof(M_list) / sizeof(M_list[0]);
 
     struct timeval start, end;
-    double time_taken;
+    double time_taken_naive, time_taken_opt;
+    double total_weight = 0.0, weighted_speedup_sum = 0.0;
 
     for (int i = 0; i < num_cases; ++i) {
-        int M = M_list[i];
-        int K = K_list[i];
-        int N = N_list[i];
-
+        int M = M_list[i], K = K_list[i], N = N_list[i];
         printf("Testing matrix multiplication: %d x %d  *  %d x %d  =  %d x %d\n",
                M, K, K, N, M, N);
 
@@ -129,36 +141,39 @@ void run_benchmark() {
 
         // 朴素算法计时
         gettimeofday(&start, NULL);
-        void multiply_naive(const double* A, const double* B, double* C, int M, int K, int N);
         multiply_naive(A, B, C_naive, M, K, N);
         gettimeofday(&end, NULL);
-        time_taken = (double)(end.tv_sec - start.tv_sec) + 
-                     (double)(end.tv_usec - start.tv_usec) / 1000000.0;
-        printf("Naive multiplication took: %f seconds.\n", time_taken);
+        time_taken_naive = (double)(end.tv_sec - start.tv_sec) + 
+                           (double)(end.tv_usec - start.tv_usec) / 1e6;
 
         // 优化算法计时
         gettimeofday(&start, NULL);
-        void multiply_optimized(const double* A, const double* B, double* C, int M, int K, int N);
         multiply_optimized(A, B, C_opt, M, K, N);
         gettimeofday(&end, NULL);
-        time_taken = (double)(end.tv_sec - start.tv_sec) + 
-                     (double)(end.tv_usec - start.tv_usec) / 1000000.0;
-        printf("Optimized multiplication took: %f seconds.\n", time_taken);
+        time_taken_opt = (double)(end.tv_sec - start.tv_sec) + 
+                         (double)(end.tv_usec - start.tv_usec) / 1e6;
+
+        // 输出加速比
+        double speedup = time_taken_naive / time_taken_opt;
+        printf("Naive: %f s\nOptimized: %f s\nSpeedup: %.3fx\n", 
+               time_taken_naive, time_taken_opt, speedup);
+
+        // 更新加权平均
+        weighted_speedup_sum += speedup * weights[i];
+        total_weight += weights[i];
 
         // 正确性验证
         int passed = 1;
         for (int j = 0; j < M * N; ++j) {
             if (fabs(C_naive[j] - C_opt[j]) > 1e-6) {
                 printf("\033[31mCorrectness test failed at index %d (row=%d, col=%d)!\n",
-                    j, j / N, j % N);
+                       j, j / N, j % N);
                 printf("Naive: %f, Optimized: %f\033[0m\n", C_naive[j], C_opt[j]);
                 passed = 0;
                 break;
             }
         }
-        if (passed) {
-            printf("\033[32mCorrectness test passed!\033[0m\n");
-        }
+        if (passed) printf("\033[32mCorrectness test passed!\033[0m\n");
         printf("--------------------------------\n");
 
         free_matrix(A);
@@ -166,6 +181,9 @@ void run_benchmark() {
         free_matrix(C_naive);
         free_matrix(C_opt);
     }
+
+    double combined_speedup = weighted_speedup_sum / total_weight;
+    printf("\033[1;34mCombined speedup (weighted 2:2:2:4): %.3fx\033[0m\n", combined_speedup);
 }
 
 
